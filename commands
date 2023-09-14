@@ -1,0 +1,15 @@
+npm init -y
+
+npm install react react-dom babel parcel
+
+.babelrc
+with
+{
+    "presets": ["@babel/preset-react"]
+}
+
+npm install --save-dev @babel/cli @babel/core @babel/preset-env @babel/preset-react
+
+npx babel src/index.js --out-dir lib/index.js 
+
+npx parcel src/index.html
