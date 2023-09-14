@@ -1,5 +1,13 @@
-export function createElement(type, props, children){
+import { TEXT_ELEMENT } from "./constants";
 
+export default Flash = {
+    createElement,
+    createTextElement,
+    render
+}
+
+function createElement(type, props, children){
+    
     return {
         type: type,
         props: {
@@ -9,34 +17,33 @@ export function createElement(type, props, children){
     }
 }
 
-export function createTextElement(props, text){
-
+function createTextElement(props, text){
+    
     return {
-        type: 'TEXT_ELEMENT',
+        type: TEXT_ELEMENT,
         props: {
             ...props,
             children: [],
             nodeValue: text
         }
     }
-
+    
 }
 
-export function render(element, containerNode){
-
-    const elementNode = element.type === 'TEXT_ELEMENT' ? document.createTextNode("") : document.createElement(element.type);
-
+function render(element, containerNode){
+    
+    const elementNode = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
+    
     for(var propName in element.props){
         if(propName == 'children') continue;
         elementNode[propName] = element.props[propName];
     }
-
+    
     console.log(element);
-
+    
     element.props.children.forEach(childElement => {
         render(childElement, elementNode)
     });
-
+    
     containerNode.appendChild(elementNode);
-
 }

@@ -2935,25 +2935,30 @@ process.umask = function() {
 };
 
 },{}],"8lqZg":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _flash = require("./flash/flash");
+var _flashDefault = parcelHelpers.interopDefault(_flash);
 function App() {
-    return (0, _flash.createElement)("div", {}, [
-        (0, _flash.createElement)("h1", {}, [
+    return (0, _flashDefault.default).createElement("div", {}, [
+        (0, _flashDefault.default).createElement("h1", {}, [
             "Hello World"
         ])
     ]);
 }
 _c = App;
-(0, _flash.render)(App(), document.getElementById("root"));
+(0, _flashDefault.default).render(App(), document.getElementById("root"));
 var _c;
 $RefreshReg$(_c, "App");
 
-},{"./flash/flash":"4Dlyy"}],"4Dlyy":[function(require,module,exports) {
+},{"./flash/flash":"4Dlyy","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4Dlyy":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "createElement", ()=>createElement);
-parcelHelpers.export(exports, "createTextElement", ()=>createTextElement);
-parcelHelpers.export(exports, "render", ()=>render);
+var _constants = require("./constants");
+exports.default = Flash = {
+    createElement,
+    createTextElement,
+    render
+};
 function createElement(type, props, children) {
     return {
         type: type,
@@ -2965,7 +2970,7 @@ function createElement(type, props, children) {
 }
 function createTextElement(props, text) {
     return {
-        type: "TEXT_ELEMENT",
+        type: (0, _constants.TEXT_ELEMENT),
         props: {
             ...props,
             children: [],
@@ -2974,7 +2979,7 @@ function createTextElement(props, text) {
     };
 }
 function render(element, containerNode) {
-    const elementNode = element.type === "TEXT_ELEMENT" ? document.createTextNode("") : document.createElement(element.type);
+    const elementNode = element.type === (0, _constants.TEXT_ELEMENT) ? document.createTextNode("") : document.createElement(element.type);
     for(var propName in element.props){
         if (propName == "children") continue;
         elementNode[propName] = element.props[propName];
@@ -2986,7 +2991,7 @@ function render(element, containerNode) {
     containerNode.appendChild(elementNode);
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./constants":"cj5Kg"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -3016,6 +3021,12 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}]},["igKGj","1xC6H","8lqZg"], "8lqZg", "parcelRequire0332")
+},{}],"cj5Kg":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "TEXT_ELEMENT", ()=>TEXT_ELEMENT);
+const TEXT_ELEMENT = "TEXT_ELEMENT";
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["igKGj","1xC6H","8lqZg"], "8lqZg", "parcelRequire0332")
 
 //# sourceMappingURL=index.975ef6c8.js.map
