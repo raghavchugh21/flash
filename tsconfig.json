@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "target": "ESNext", // or your desired target version
+      "module": "CommonJS", // or your desired module system
+      "outDir": "./lib", // output directory for transpiled files
+      "strict": true,
+      "esModuleInterop": true
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"]
+}

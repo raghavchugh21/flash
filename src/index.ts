@@ -4,10 +4,11 @@ function App(){
     return (
         Flash.createElement('div', {},
                                         [Flash.createElement('h1', {}, 
-                                                                        ['Hello World']
+                                                                        [Flash.createTextElement({}, 'Hello World')]
                                         )]
         )
     );
 }
 
-Flash.render(App(), document.getElementById('root'));
+const root = document.getElementById('root');
+root && Flash.render(App(), root);
