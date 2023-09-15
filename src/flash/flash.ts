@@ -6,13 +6,13 @@ const Flash = {
     render
 };
 
-function createElement(type: string, props: {[key: string]: any}, children: FlashElement[]): FlashElement{
+function createElement(type: string, props: {[key: string]: any}, children: (FlashElement|string)[]): FlashElement{
 
     return {
         type: type,
         props: {
             ...props,
-            children: children
+            children: children.map(child => ( (typeof child == 'string' ? createTextElement({}, child) : (child) ) ))
         }
     }
 }

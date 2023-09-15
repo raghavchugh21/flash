@@ -4,11 +4,16 @@ function App(){
     return (
         Flash.createElement('div', {},
                                         [Flash.createElement('h1', {}, 
-                                                                        [Flash.createTextElement({}, 'Hello World')]
+                                                                        ['Hello World']
                                         )]
         )
     );
 }
 
 const root = document.getElementById('root');
-root && Flash.render(App(), root);
+
+if(!root){
+    throw("Root is not defined");
+}
+
+Flash.render(App(), root);
