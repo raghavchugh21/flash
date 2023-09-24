@@ -15,5 +15,6 @@ const root = document.getElementById('root');
 if(!root){
     throw("Root is not defined");
 }
-
-Flash.render(App(), root);
+setInterval(() => {
+    Flash.render(App(), root);
+}, 1000);

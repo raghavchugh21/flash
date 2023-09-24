@@ -3,7 +3,7 @@
       "target": "ESNext", // or your desired target version
       "module": "CommonJS", // or your desired module system
       "outDir": "./lib", // output directory for transpiled files
-      "strict": true,
+      "strict": false,
       "esModuleInterop": true
     },
     "include": ["src/**/*.ts"],
