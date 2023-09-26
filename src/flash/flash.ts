@@ -34,9 +34,10 @@ let rootFiber: Fiber = null;
 /* 
     This method takes in the new element, and container DOM node, and triggers the reconciliation of the old fibers.
 */
-function render(element: FlashElement, container: HTMLElement | Text){
+function render(element: FlashElement, container: HTMLElement): void{
 
-    if(!rootFiber){
+    // If this is first render or the container dom has changed, re initialize the rootFiber.
+    if(!rootFiber || rootFiber.dom !== container){
         let childFiber = createFiber(element.type, element.props);
         rootFiber = {
             type: 'ROOT',
@@ -54,7 +55,7 @@ function render(element: FlashElement, container: HTMLElement | Text){
 }
 
 function createFiber(type: string, props: FiberProps): Fiber{
-    
+
     return {
         type: type,
         props: props,
@@ -64,25 +65,27 @@ function createFiber(type: string, props: FiberProps): Fiber{
         dom: null,
         sibling: null
     }
-    
+
 }
 
 function createDomNode(element: FlashElement): HTMLElement | Text{
-    const elementNode: HTMLElement | Text = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
 
+    const elementNode: HTMLElement | Text = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
+    
     for(var propName in element.props){
         if(propName == 'children') continue;
         elementNode[propName] = element.props[propName];
     }
     return elementNode
+
 }
 
 /* 
-    This method reconciles the old fibers with new react elements and appends any required changes to the dom.
+This method reconciles the old fibers with new react elements and appends any required changes to the dom.
 */
-function reconcileFiber(element:FlashElement, fiber:Fiber){
+function reconcileFiber(element:FlashElement, fiber:Fiber): void{
     
-    // Creates the fibers of children, call reconcileFiber on children.
+    // Creates the fibers of children that didn't exist, calls reconcileFiber on children.
     // Create DOM Node for current fiber, apppend it to parent.
     if(!fiber.dom){
         fiber.dom = createDomNode(element);
