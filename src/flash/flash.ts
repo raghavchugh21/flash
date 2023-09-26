@@ -83,7 +83,7 @@ function createDomNode(element: FlashElement): HTMLElement | Text{
 /* 
 This method reconciles the old fibers with new react elements and appends any required changes to the dom.
 */
-function reconcileFiber(element:FlashElement, fiber:Fiber): void{
+function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     
     // Creates the fibers of children that didn't exist, calls reconcileFiber on children.
     // Create DOM Node for current fiber, apppend it to parent.
@@ -98,7 +98,8 @@ function reconcileFiber(element:FlashElement, fiber:Fiber): void{
     let childElements = element.props.children;
     let oldChildFibers = fiber.children;
 
-    // let previousSibling = null;
+    fiber.child = null;
+    let previousSibling = null;
     childElements.forEach( (childElement, idx) => {
         childElement.props.key = childElement.props.key ?? idx;
         let key = childElement.props.key;
@@ -112,27 +113,33 @@ function reconcileFiber(element:FlashElement, fiber:Fiber): void{
             fiber.children[key] = createFiber(childElement.type, childElement.props);
         }
 
-        // if(!fiber.child){
-        //     fiber.child = fiber.children[key];
-        //     previousSibling = fiber.children[key];
-        // }
-        // else{
-        //     previousSibling.sibling = fiber.children[key];
-        //     previousSibling = fiber.children[key];
-        // }
-
+        if(idx == 0){
+            fiber.child = fiber.children[key];
+            previousSibling = fiber.children[key];
+        }
+        else{
+            previousSibling.sibling = fiber.children[key];
+            previousSibling = fiber.children[key];
+        }
+        
         fiber.children[key].parent = fiber
     });
+    if(previousSibling != null){
+        previousSibling.sibling = null;
+    }
     
     oldChildFibers.forEach(oldChildFiber => {
         let key = oldChildFiber.props.key;
-        if(!(key in childElements)){
+        let childKeys = Object.fromEntries(childElements.map(childElement => [childElement.props.key, true]));
+        if(!(key in childKeys)){
             delete oldChildFibers[key]
         }
     });
 
-    for(let i = 0; i<fiber.children.length; i++){
-        reconcileFiber(element.props.children[i], fiber.children[i])
+    let nextFiber = fiber.child;
+    for(let i=0;i<childElements.length;i++){
+        reconcileFiber(childElements[i], nextFiber)
+        nextFiber = nextFiber.sibling;
     }
 
 }
