@@ -28,7 +28,9 @@ export interface Fiber {
     child: Fiber | null
     sibling: Fiber | null
     dom: HTMLElement | Text
+    index: number | null,
     effectTag: string | null
-    index: number
+    shiftTag: boolean,
+    prev: Fiber | null
 }
 

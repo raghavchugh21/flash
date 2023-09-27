@@ -47,7 +47,9 @@ function render(element: FlashElement, container: HTMLElement): void{
             parent: null,
             children: [],
             effectTag: 'ADD',
-            index: 0
+            index: 0,
+            shiftTag: false,
+            prev: null
         }
     }
     else{
@@ -69,8 +71,10 @@ function createFiber(type: string, props: FiberProps): Fiber{
         child: null,
         dom: null,
         sibling: null,
+        index: null,
         effectTag: null,
-        index: null
+        shiftTag: false,
+        prev: null
     }
 
 }
@@ -94,21 +98,32 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     
     // Creates the fibers of children that didn't exist, calls reconcileFiber on children.
     // Create DOM Node for current fiber, apppend it to parent.
-    if(!fiber.parent){
-        ;
-    }
-    else if(!fiber.dom || fiber.effectTag === 'ADD' || (element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE' )){
-        if(fiber.dom){
-            fiber.parent.dom.removeChild(fiber.dom);
-        }
+    if(!fiber.dom){
         fiber.dom = createDomNode(element);
     }
 
     if(fiber.parent){
-        fiber.parent.dom.appendChild(fiber.dom);
+        if(fiber.effectTag === 'ADD'){
+            console.log(`appending`, fiber.dom,` to `, fiber.parent.dom);
+            fiber.parent.dom.appendChild(fiber.dom);
+        }
+        else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
+            console.log(`appending`, fiber.dom,` to `, fiber.parent.dom);
+            fiber.parent.dom.appendChild(fiber.dom);
+        }
+        else if(fiber.shiftTag){
+            if(fiber.prev != null ){
+                console.log(`inserting`, fiber.dom,` before `, fiber.prev.dom.nextSibling);
+                fiber.parent.dom.insertBefore(fiber.dom, fiber.prev.dom.nextSibling);
+            }
+            else{
+                console.log(`inserting`, fiber.dom,` before `, fiber.parent.dom.firstChild);
+                fiber.parent.dom.insertBefore(fiber.dom, fiber.parent.dom.firstChild);
+            }
+        }
     }
 
-    console.log(fiber.effectTag, " ", fiber.dom);
+    console.log(fiber.effectTag, " ", fiber.dom, " ", fiber.shiftTag);
     
     let childElements = element.props.children;
     let oldChildFibers = fiber.children;
@@ -119,7 +134,8 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
         if(!(key in childElementKeys)){
             fiber.children[key].effectTag = 'DELETE';
             if(fiber.children[key].dom){
-                console.log(fiber.children[key].effectTag, " ", fiber.children[key].dom);
+                console.log(fiber.children[key].effectTag, " ", fiber.children[key].dom, " ", fiber.children[key].shiftTag);
+                console.log(`removing`, fiber.children[key].dom,` from `, fiber.dom);
                 fiber.dom.removeChild(fiber.children[key].dom);
             }
             delete oldChildFibers[key]
@@ -151,27 +167,40 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
         else{
             fiber.children[key] = createFiber(childElement.type, childElement.props);
             fiber.children[key].effectTag = 'ADD';
+            if(fiber.children[key].dom){
+                console.log(`removing`, fiber.children[key].dom,` from `, fiber.dom);
+                fiber.dom.removeChild(fiber.children[key].dom);
+            }
         }
 
         if(idx == 0){
             fiber.child = fiber.children[key];
             previousSibling = fiber.children[key];
+            fiber.children[key].prev = null;
         }
         else{
+            fiber.children[key].prev = previousSibling;
             previousSibling.sibling = fiber.children[key];
             previousSibling = fiber.children[key];
         }
-        previousSibling.index = idx;
-        
+
+        if((fiber.children[key].effectTag === 'UPDATE' || fiber.children[key].effectTag === 'SAME') && fiber.children[key].index != idx){
+            fiber.children[key].shiftTag = true;
+        }
+        else{
+            fiber.children[key].shiftTag = false;
+        }
+
+        fiber.children[key].index = idx;
         fiber.children[key].parent = fiber
         
         reconcileFiber(childElement, fiber.children[key]);
 
     });
 
-    // if(previousSibling != null){
-    //     previousSibling.sibling = null;
-    // }
+    if(previousSibling != null){
+        previousSibling.sibling = null;
+    }
 
     // let nextFiber = fiber.child;
     // for(let i=0;i<childElements.length;i++){
