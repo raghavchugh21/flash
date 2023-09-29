@@ -19,9 +19,9 @@ function App2(){
         Flash.createElement('div', {},
                                         [Flash.createElement('ul', {}, 
                                                                         [
-                                                                            Flash.createElement('li', {key: 1}, ['Item 1']),
-                                                                            Flash.createElement('li', {key: 0}, ['Item 0']),
-                                                                            Flash.createElement('li', {key: 2}, ['Item 2'])
+                                                                            Flash.createElement('li', {key: 1}, ['Item 2']),
+                                                                            Flash.createElement('li', {key: 0}, ['Item 1']),
+                                                                            Flash.createElement('li', {key: 2}, ['Item 3'])
                                                                         ]
                                         )]
         )
@@ -34,9 +34,12 @@ if(!root){
     throw("Root is not defined");
 }
 
-const app = App1();
+let app = App1();
 console.log(app);
 Flash.render(app, root);
+
+app = App2();
 setTimeout(() => {
-    Flash.render(App2(), root);
+    console.log(app);
+    Flash.render(app, root);
 }, 1000);

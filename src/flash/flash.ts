@@ -71,56 +71,6 @@ function render(element: FlashElement, container: DOMNode): void{
 }
 
 /* 
-    This method takes in the type of FlashElement and its Props. Returns a fiber node of same type and props (without children).
-*/
-function createFiber(type: string, props: FiberProps): Fiber{
-
-    let {children: _, ...otherProps} = props;
-    return {
-        type: type,
-        props: otherProps,
-        children: [],
-        parent: null,
-        child: null,
-        dom: null,
-        sibling: null,
-        index: null,
-        effectTag: null,
-        shiftTag: false,
-        prev: null
-    }
-
-}
-
-/* 
-    This method takes in a FlashElement and returns a DOM node with props value set other than children.
-*/
-function createDomNode(element: FlashElement): DOMNode{
-
-    const elementNode: DOMNode = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
-    
-    updateProps(elementNode, element.props);
-    
-    return elementNode;
-}
-
-function updateProps(domNode: DOMNode, props: Props){
-    for(var propName in props){
-        if(propName == 'children') continue;
-        domNode[propName] = props[propName];
-    }
-}
-
-function removeChildFiber(childFiber: Fiber){
-    childFiber.effectTag = 'DELETE';
-    if(childFiber.dom){
-        console.log(childFiber.effectTag, " ", childFiber.dom, " ", childFiber.shiftTag);
-        console.log(`removing`, childFiber.dom,` from `, childFiber.parent.dom);
-        childFiber.parent.dom.removeChild(childFiber.dom);
-    }
-}
-
-/* 
     This method reconciles the old fibers with new react elements and appends any required changes to the dom.
     In this method, we compare the children of current element and fiber, then:
         1. Remove the fiber children not in element's children. Also, remove their DOM nodes.
@@ -189,7 +139,7 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
                     }
                     fiber.children[key].effectTag = 'UPDATE';
                 }
-                fiber.children[key].shiftTag = fiber.index != idx;
+                fiber.children[key].shiftTag = fiber.children[key].index != idx;
 
             }
         }
@@ -222,6 +172,54 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     }
 }
 
+/* 
+    This method takes in the type of FlashElement and its Props. Returns a fiber node of same type and props (without children).
+*/
+function createFiber(type: string, props: FiberProps): Fiber{
 
+    let {children: _, ...otherProps} = props;
+    return {
+        type: type,
+        props: otherProps,
+        children: [],
+        parent: null,
+        child: null,
+        dom: null,
+        sibling: null,
+        index: null,
+        effectTag: null,
+        shiftTag: false,
+        prev: null
+    }
+
+}
+
+/* 
+    This method takes in a FlashElement and returns a DOM node with props value set other than children.
+*/
+function createDomNode(element: FlashElement): DOMNode{
+
+    const elementNode: DOMNode = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
+    
+    updateProps(elementNode, element.props);
+    
+    return elementNode;
+}
+
+function updateProps(domNode: DOMNode, props: Props){
+    for(var propName in props){
+        if(propName == 'children') continue;
+        domNode[propName] = props[propName];
+    }
+}
+
+function removeChildFiber(childFiber: Fiber){
+    childFiber.effectTag = 'DELETE';
+    if(childFiber.dom){
+        console.log(childFiber.effectTag, " ", childFiber.dom, " ", childFiber.shiftTag);
+        console.log(`removing`, childFiber.dom,` from `, childFiber.parent.dom);
+        childFiber.parent.dom.removeChild(childFiber.dom);
+    }
+}
 
 export default Flash;
