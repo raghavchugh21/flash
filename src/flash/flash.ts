@@ -86,20 +86,16 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     }
 
     if(fiber.parent){
-        if(fiber.effectTag === 'ADD' || (element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE')){
-            
-            if(fiber.effectTag === 'UPDATE')
-                updateProps(fiber.dom, element.props);
-
+        if(fiber.effectTag === 'ADD'){
             console.log(`appending`, fiber.dom,` to `, fiber.parent.dom);
             fiber.parent.dom.appendChild(fiber.dom);
-
+        }
+        else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
+            updateProps(fiber.dom, element.props);
         }
         else if(fiber.shiftTag){
-
             console.log(`inserting`, fiber.dom,` before `, fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling);
             fiber.parent.dom.insertBefore(fiber.dom, fiber.prev == null ? fiber.parent.dom.firstChild : fiber.prev.dom.nextSibling);
-
         }
     }
 
