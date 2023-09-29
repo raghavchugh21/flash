@@ -1,5 +1,7 @@
 export const TEXT_ELEMENT = 'TEXT_ELEMENT';
 
+export type DOMNode = HTMLElement | Text;
+
 export type Props = {
     key?: string | number
     children: FlashElement[]
