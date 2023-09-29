@@ -123,7 +123,7 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
         }
     }
 
-    console.log(fiber.effectTag, " ", fiber.dom, " ", fiber.shiftTag);
+    console.log(fiber.effectTag, " ", fiber.dom, " ", fiber.shiftTag ? "shifted" :  "");
     
     let childElements = element.props.children;
     let oldChildFibers = fiber.children;

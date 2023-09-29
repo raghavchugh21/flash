@@ -5,8 +5,8 @@ function App1(){
         Flash.createElement('div', {},
                                         [Flash.createElement('ul', {}, 
                                                                         [
-                                                                            Flash.createElement('li', {key: 2}, ['Item 2']),
                                                                             Flash.createElement('li', {key: 1}, ['Item 1']),
+                                                                            Flash.createElement('li', {key: 2}, ['Item 2']),
                                                                             Flash.createElement('li', {key: 3}, ['Item 3'])
                                                                         ]
                                         )]
@@ -19,8 +19,8 @@ function App2(){
         Flash.createElement('div', {},
                                         [Flash.createElement('ul', {}, 
                                                                         [
-                                                                            Flash.createElement('li', {key: 3}, ['Item 3']),
                                                                             Flash.createElement('li', {key: 1}, ['Item 1']),
+                                                                            Flash.createElement('li', {key: 0}, ['Item 0']),
                                                                             Flash.createElement('li', {key: 2}, ['Item 2'])
                                                                         ]
                                         )]
