@@ -77,7 +77,7 @@ function render(element: FlashElement, container: DOMNode): void{
         2. For the children with same keys (if no key, use index), compare type. 
            If type is same, then compare props. If props are also same, then place 'SAME' tag on child fiber. Else 'UPDATE' tag.
            Else, place an 'ADD' tag. In this case, you should remove child DOM.
-        3. 
+        3. Call reconcileFiber on children on the go, in order of traversing child elements.
 */
 function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     
