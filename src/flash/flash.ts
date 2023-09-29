@@ -80,10 +80,6 @@ function render(element: FlashElement, container: DOMNode): void{
         3. Call reconcileFiber on children on the go, in order of traversing child elements.
 */
 function reconcileFiber(element: FlashElement, fiber: Fiber): void{
-    
-    // if(!fiber.dom){
-    //     fiber.dom = createDomNode(element);
-    // }
 
     if(fiber.parent){
         if(fiber.effectTag === 'ADD' || fiber.shiftTag){
