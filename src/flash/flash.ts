@@ -84,7 +84,7 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     if(fiber.parent){
         if(fiber.effectTag === 'ADD' || fiber.shiftTag){
             let nextDomNode = fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling;
-            (nextDomNode != null ? console.log(`moving`, fiber.dom,` before `, nextDomNode) : console.log(`moving`, fiber.dom,` to end`))
+            (nextDomNode != null ? console.log(`moving `, fiber.dom,` before `, nextDomNode) : console.log(`moving `, fiber.dom,` to end`))
             fiber.parent.dom.insertBefore(fiber.dom, nextDomNode);
         }
         else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
