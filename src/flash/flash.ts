@@ -81,21 +81,17 @@ function render(element: FlashElement, container: DOMNode): void{
 */
 function reconcileFiber(element: FlashElement, fiber: Fiber): void{
     
-    if(!fiber.dom){
-        fiber.dom = createDomNode(element);
-    }
+    // if(!fiber.dom){
+    //     fiber.dom = createDomNode(element);
+    // }
 
     if(fiber.parent){
-        if(fiber.effectTag === 'ADD'){
-            console.log(`appending`, fiber.dom,` to `, fiber.parent.dom);
-            fiber.parent.dom.appendChild(fiber.dom);
+        if(fiber.effectTag === 'ADD' || fiber.shiftTag){
+            console.log(`inserting`, fiber.dom,` before `, fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling);
+            fiber.parent.dom.insertBefore(fiber.dom, fiber.prev == null ? fiber.parent.dom.firstChild : fiber.prev.dom.nextSibling);
         }
         else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
             updateProps(fiber.dom, element.props);
-        }
-        else if(fiber.shiftTag){
-            console.log(`inserting`, fiber.dom,` before `, fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling);
-            fiber.parent.dom.insertBefore(fiber.dom, fiber.prev == null ? fiber.parent.dom.firstChild : fiber.prev.dom.nextSibling);
         }
     }
 
@@ -140,7 +136,7 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
             }
         }
         else{
-            fiber.children[key] = createFiber(childElement.type, childElement.props);
+            fiber.children[key] = createFiber(childElement);
             fiber.children[key].effectTag = 'ADD';
         }
 
@@ -171,16 +167,16 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
 /* 
     This method takes in the type of FlashElement and its Props. Returns a fiber node of same type and props (without children).
 */
-function createFiber(type: string, props: FiberProps): Fiber{
+function createFiber(element: FlashElement): Fiber{
 
-    let {children: _, ...otherProps} = props;
+    let {children: _, ...otherProps} = element.props;
     return {
-        type: type,
+        type: element.type,
         props: otherProps,
         children: [],
         parent: null,
         child: null,
-        dom: null,
+        dom: createDomNode(element),
         sibling: null,
         index: null,
         effectTag: null,
