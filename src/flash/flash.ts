@@ -87,15 +87,16 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
 
     if(fiber.parent){
         if(fiber.effectTag === 'ADD' || fiber.shiftTag){
-            console.log(`inserting`, fiber.dom,` before `, fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling);
-            fiber.parent.dom.insertBefore(fiber.dom, fiber.prev == null ? fiber.parent.dom.firstChild : fiber.prev.dom.nextSibling);
+            let nextDomNode = fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling;
+            ( fiber.prev == null ? console.log(`appending`, fiber.dom,` to `, fiber.parent.dom) : (nextDomNode != null ? console.log(`moving`, fiber.dom,` before `, nextDomNode) : console.log(`moving`, fiber.dom,` to end`)) )
+            fiber.parent.dom.insertBefore(fiber.dom, nextDomNode);
         }
         else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
             updateProps(fiber.dom, element.props);
         }
     }
 
-    console.log(fiber.effectTag, " ", fiber.dom, " ", fiber.shiftTag ? "shifted" :  "");
+    console.log(fiber.effectTag, " ", fiber.dom, `${(fiber.shiftTag && "shifted")||""}`);
     
     let childElements = element.props.children;
     let childFibers = fiber.children;
