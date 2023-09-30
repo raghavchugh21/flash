@@ -61,8 +61,12 @@ function render(element: FlashElement, container: DOMNode): void{
     }
 
     if(wipRoot.effectTag == 'ADD'){ wipRoot.alternate = currentRoot = null; }
-        
-    reconcileFiber(wipRoot);
+    
+    let nextFiber = wipRoot;
+    while(nextFiber){
+        nextFiber = reconcileFiber(nextFiber);
+    }
+
     currentRoot = wipRoot;
     wipRoot = wipRoot.alternate;
 
@@ -87,7 +91,7 @@ function render(element: FlashElement, container: DOMNode): void{
         If new element index and old child fiber index don't match, set shiftTag: true. Create new fiber for others, set alternate: null.
     }
 */
-function reconcileFiber(fiber: Fiber): void{
+function reconcileFiber(fiber: Fiber): Fiber{
 
     if(fiber.parent){
         if(fiber.effectTag === 'ADD' || fiber.shiftTag){
@@ -155,9 +159,6 @@ function reconcileFiber(fiber: Fiber): void{
             previousSibling.sibling = fiber.children[key];
             previousSibling = fiber.children[key];
         }
-
-        reconcileFiber(fiber.children[key]);
-
     });
 
     if(previousSibling != null){
@@ -172,6 +173,16 @@ function reconcileFiber(fiber: Fiber): void{
             delete oldChildFibers[key];
         }
     });
+
+    // Return nextFiber
+    let nextFiber = fiber;
+    if(nextFiber.child){
+        return nextFiber.child;
+    }
+    while(!nextFiber.sibling && nextFiber.parent){
+        nextFiber = nextFiber.parent;
+    }
+    return nextFiber.sibling
 
 }
 
