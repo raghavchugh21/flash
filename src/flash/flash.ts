@@ -1,4 +1,4 @@
-import { FlashElement, Props, TEXT_ELEMENT, Fiber, FiberProps, DOMNode } from './types';
+import { FlashElement, Props, TEXT_ELEMENT, Fiber, DOMNode } from './types';
 
 const Flash = {
     createElement,
@@ -14,6 +14,7 @@ function createElement(type: string, props: {[key: string]: any}, children: (Fla
     return {
         type: type,
         props: {
+            key: type == 'ROOT' ? 0 : undefined,
             ...props,
             children: children.map((child, idx) => {
                 let childElement = (typeof child == 'string') ? createTextElement({}, child) : (child);
@@ -39,7 +40,8 @@ function createTextElement(props: {[key: string]: any}, text: string): FlashElem
     }
 }
 
-let rootFiber: Fiber = null;
+let currentRoot: Fiber = null;
+let wipRoot: Fiber = null;
 
 /* 
     This method takes in the new element, and container DOM node, and triggers the reconciliation of the old fibers.
@@ -47,39 +49,45 @@ let rootFiber: Fiber = null;
 function render(element: FlashElement, container: DOMNode): void{
 
     // If this is first render or the container dom has changed, re initialize the rootFiber.
-    if(!rootFiber || rootFiber.dom !== container){
-        rootFiber = {
-            type: 'ROOT',
-            dom: container,
-            props: {key: 0},
-            child: null,
-            sibling: null,
-            parent: null,
-            children: [],
-            effectTag: 'ADD',
-            index: 0,
-            shiftTag: false,
-            prev: null
-        }
-    }
-    else{
-        rootFiber.effectTag = 'SAME';
+    const rootElement = {type: 'ROOT', props: {key: 0, children: [element]}};
+    wipRoot = {
+        type: rootElement.type,
+        dom: container,
+        props: rootElement.props,
+        children: [],
+        index: 0,
+        alternate: currentRoot,
+        effectTag: (currentRoot?.dom === container) ? 'SAME' : 'ADD'
     }
 
-    reconcileFiber(createElement('ROOT', {key: 0}, [element]), rootFiber);
+    if(wipRoot.effectTag == 'ADD'){ wipRoot.alternate = currentRoot = null; }
+        
+    reconcileFiber(wipRoot);
+    currentRoot = wipRoot;
+    wipRoot = wipRoot.alternate;
 
 }
 
 /* 
-    This method reconciles the old fibers with new react elements and appends any required changes to the dom.
-    In this method, we compare the children of current element and fiber, then:
-        1. Remove the fiber children not in element's children. Also, remove their DOM nodes.
-        2. For the children with same keys (if no key, use index), compare type. 
-           If type is same, then compare props. If props are also same, then place 'SAME' tag on child fiber. Else 'UPDATE' tag.
-           Else, place an 'ADD' tag. In this case, you should remove child DOM.
-        3. Call reconcileFiber on children on the go, in order of traversing child elements.
+    This method reconciles the new fibers with new react elements and appends any required changes to the dom.
+    
+    RECONCILE - NEW FIBER (WITH NEW ELEMENTS) ~ WITH ~ OLD FIBER (WITH OLD ELEMENTS)
+    
+    alternateFiber{
+        type: oldElement.type
+        props: oldElement.props
+        children: { oldChildKey1: oldChildFiber1, oldChildKey2: oldChildFiber2, ... }
+    }
+    
+    newFiber{
+        type: newElement.type
+        props: newElement.props (also means props.children will have new child elements)
+        children: {?} --> iterate over props.children, copy fiber from alternateFiber.children where key and type matches,
+        set alternate: alternateFiber.children[key] for them, so we can keep comparing for child. If props dont match, update props.
+        If new element index and old child fiber index don't match, set shiftTag: true. Create new fiber for others, set alternate: null.
+    }
 */
-function reconcileFiber(element: FlashElement, fiber: Fiber): void{
+function reconcileFiber(fiber: Fiber): void{
 
     if(fiber.parent){
         if(fiber.effectTag === 'ADD' || fiber.shiftTag){
@@ -87,25 +95,15 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
             (nextDomNode != null ? console.log(`appending `, fiber.dom,` before `, nextDomNode) : console.log(`appending `, fiber.dom,` to end`))
             fiber.parent.dom.insertBefore(fiber.dom, nextDomNode);
         }
-        else if(element.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
-            updateProps(fiber.dom, element.props);
+        else if(fiber.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
+            updateProps(fiber.dom, fiber.props);
         }
     }
 
     console.log(fiber.effectTag, " ", fiber.dom, `${(fiber.shiftTag && "shifted")||""}`);
     
-    let childElements = element.props.children;
-    let childFibers = fiber.children;
-
-    // Delete child fibers that don't exist in the element now.
-    let childElementKeysDict = Object.fromEntries(childElements.map((childElement, idx) => [(childElement.props.key ?? idx), true]));
-    childFibers.forEach(childFiber => {
-        let childFiberKey = childFiber.props.key;
-        if(!(childFiberKey in childElementKeysDict)){
-            removeChildFiber(childFibers[childFiberKey]);
-            delete childFibers[childFiberKey];
-        }
-    });
+    let childElements = fiber.props.children;
+    let oldChildFibers = fiber.alternate?.children ?? [];
 
     // Set effect tags for child fibers that exist in element, and create new child fibers for new child elements.
     let previousSibling: Fiber = null;
@@ -115,27 +113,36 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
         
         // Create fiber if needed and place SAME, UPDATE or ADD tags. Update shift tag.
         let key = childElement.props.key;
-        if(key in childFibers){
-            if(childFibers[key].type === childElement.type){
+        if(key in oldChildFibers){
+            if(oldChildFibers[key].type === childElement.type){
 
+                fiber.children[key] = {
+                    type: oldChildFibers[key].type,
+                    props: childElement.props,
+                    dom: oldChildFibers[key].dom,
+                    alternate: oldChildFibers[key]
+                }
+
+                let {children: _, ...oldProps} = oldChildFibers[key].props;
                 let {children: __, ...newProps} = childElement.props;
-                if(JSON.stringify(fiber.children[key].props) == JSON.stringify(newProps)){
-                    fiber.children[key].effectTag = 'SAME';
-                }
-                else{
-                    for(var prop in newProps){
-                        fiber.children[key].props[prop] = childElement.props[prop];
-                    }
-                    fiber.children[key].effectTag = 'UPDATE';
-                }
-                fiber.children[key].shiftTag = fiber.children[key].index != idx;
+
+                fiber.children[key].effectTag = JSON.stringify(oldProps) == JSON.stringify(newProps) ? 'SAME' : 'UPDATE';
+                fiber.children[key].shiftTag = oldChildFibers[key].index != idx;
 
             }
         }
         else{
-            fiber.children[key] = createFiber(childElement);
+            fiber.children[key] = {
+                type: childElement.type,
+                props: childElement.props,
+                dom: createDomNode(childElement.type, childElement.props)
+            };
             fiber.children[key].effectTag = 'ADD';
         }
+
+        fiber.children[key].index = idx;
+        fiber.children[key].parent = fiber;
+        fiber.children[key].children = [];
 
         // Update chid, sibling, parent and index properties
         if(idx == 0){
@@ -149,49 +156,31 @@ function reconcileFiber(element: FlashElement, fiber: Fiber): void{
             previousSibling = fiber.children[key];
         }
 
-        fiber.children[key].parent = fiber
-        fiber.children[key].index = idx;
-        
-        reconcileFiber(childElement, fiber.children[key]);
+        reconcileFiber(fiber.children[key]);
 
     });
 
     if(previousSibling != null){
         previousSibling.sibling = null;
     }
-}
 
-/* 
-    This method takes in the type of FlashElement and its Props. Returns a fiber node of same type and props (without children).
-*/
-function createFiber(element: FlashElement): Fiber{
-
-    let {children: _, ...otherProps} = element.props;
-    return {
-        type: element.type,
-        props: otherProps,
-        children: [],
-        parent: null,
-        child: null,
-        dom: createDomNode(element),
-        sibling: null,
-        index: null,
-        effectTag: null,
-        shiftTag: false,
-        prev: null
-    }
+    // Delete old child fibers that don't exist in the element now.
+    oldChildFibers.forEach(oldChildFiber => {
+        let key = oldChildFiber.props.key;
+        if(!(key in fiber.children)){
+            removeChildFiber(oldChildFibers[key]);
+            delete oldChildFibers[key];
+        }
+    });
 
 }
 
 /* 
     This method takes in a FlashElement and returns a DOM node with props value set other than children.
 */
-function createDomNode(element: FlashElement): DOMNode{
-
-    const elementNode: DOMNode = element.type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(element.type);
-    
-    updateProps(elementNode, element.props);
-    
+function createDomNode(type: string, props: Props): DOMNode{
+    const elementNode: DOMNode = type === TEXT_ELEMENT ? document.createTextNode("") : document.createElement(type);
+    updateProps(elementNode, props);
     return elementNode;
 }
 
@@ -205,7 +194,7 @@ function updateProps(domNode: DOMNode, props: Props){
 function removeChildFiber(childFiber: Fiber){
     childFiber.effectTag = 'DELETE';
     if(childFiber.dom){
-        console.log(childFiber.effectTag, " ", childFiber.dom, " ", childFiber.shiftTag);
+        console.log(childFiber.effectTag, " ", childFiber.dom);
         console.log(`removing`, childFiber.dom,` from `, childFiber.parent.dom);
         childFiber.parent.dom.removeChild(childFiber.dom);
     }

@@ -10,13 +10,6 @@ export type Props = {
     [attribute: string]: any
 }
 
-export type FiberProps = {
-    key?: string | number
-    nodeValue?: string
-} & {
-    [attribute: string]: any
-}
-
 export interface FlashElement {
     type: string
     props: Props
@@ -24,15 +17,16 @@ export interface FlashElement {
 
 export interface Fiber {
     type: string
-    props: FiberProps
+    props: Props
     children: Fiber[]
-    parent: Fiber | null
-    child: Fiber | null
-    sibling: Fiber | null
     dom: HTMLElement | Text
-    index: number | null,
-    effectTag: string | null
-    shiftTag: boolean,
-    prev: Fiber | null
+    index?: number,
+    effectTag?: string
+    shiftTag?: boolean,
+    parent?: Fiber
+    child?: Fiber
+    sibling?: Fiber
+    prev?: Fiber
+    alternate?: Fiber
 }
 
