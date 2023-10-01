@@ -17,7 +17,7 @@ function App1(){
 function App2(){
     return (
         Flash.createElement('div', {},
-                                        [Flash.createElement('ul', {}, 
+                                        [Flash.createElement('ol', {}, 
                                                                         [
                                                                             Flash.createElement('li', {key: 1}, ['Item 2']),
                                                                             Flash.createElement('li', {key: 3}, ['Item 4']),

@@ -48,6 +48,7 @@ let wipRoot: Fiber = null;
 */
 function render(element: FlashElement, container: DOMNode): void{
 
+    element.props.key = 0;
     // If this is first render or the container dom has changed, re initialize the rootFiber.
     const rootElement = {type: 'ROOT', props: {key: 0, children: [element]}};
     wipRoot = {
@@ -134,14 +135,22 @@ function reconcileFiber(fiber: Fiber): Fiber{
                 fiber.children[key].shiftTag = oldChildFibers[key].index != idx;
 
             }
+            else{
+                removeChildFiberFromDOM(oldChildFibers[key]);
+                delete oldChildFibers[key];
+                fiber.children[key].effectTag = 'ADD';
+            }
         }
         else{
+            fiber.children[key].effectTag = 'ADD';
+        }
+
+        if(fiber.children[key].effectTag === 'ADD'){
             fiber.children[key] = {
                 type: childElement.type,
                 props: childElement.props,
                 dom: createDomNode(childElement.type, childElement.props)
             };
-            fiber.children[key].effectTag = 'ADD';
         }
 
         fiber.children[key].index = idx;
@@ -169,7 +178,7 @@ function reconcileFiber(fiber: Fiber): Fiber{
     oldChildFibers.forEach(oldChildFiber => {
         let key = oldChildFiber.props.key;
         if(!(key in fiber.children)){
-            removeChildFiber(oldChildFibers[key]);
+            removeChildFiberFromDOM(oldChildFibers[key]);
             delete oldChildFibers[key];
         }
     });
@@ -202,7 +211,7 @@ function updateProps(domNode: DOMNode, props: Props){
     }
 }
 
-function removeChildFiber(childFiber: Fiber){
+function removeChildFiberFromDOM(childFiber: Fiber){
     childFiber.effectTag = 'DELETE';
     if(childFiber.dom){
         console.log(childFiber.effectTag, " ", childFiber.dom);
