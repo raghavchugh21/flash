@@ -21,8 +21,7 @@ export interface Fiber {
     children: Fiber[]
     dom: HTMLElement | Text
     index?: number,
-    effectTag?: string
-    shiftTag?: boolean,
+    tags?: number
     parent?: Fiber
     child?: Fiber
     sibling?: Fiber
@@ -30,3 +29,21 @@ export interface Fiber {
     alternate?: Fiber
 }
 
+export enum EFFECT {
+    NONE = 0,
+    UPDATE = 2,
+    ADD = 4,
+    DELETE = 8,
+    SHIFT = 16
+}
+
+export function tagsToString(tags: EFFECT) {
+    let tagList = ['SAME', 'UPDATE', 'ADD', 'DELETE', 'SHIFT'];
+    if(tags == 0) return tagList[0];
+
+    let str = "";
+    for(let b = 1; b < tagList.length; b++){
+        if(tags & (1<<b)) str += tagList[b] + " ";
+    }
+    return str;
+}

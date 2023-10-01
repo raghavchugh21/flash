@@ -1,4 +1,4 @@
-import { FlashElement, Props, TEXT_ELEMENT, Fiber, DOMNode } from './types';
+import { FlashElement, Props, TEXT_ELEMENT, Fiber, DOMNode, EFFECT, tagsToString } from './types';
 
 const Flash = {
     createElement,
@@ -58,10 +58,10 @@ function render(element: FlashElement, container: DOMNode): void{
         children: [],
         index: 0,
         alternate: currentRoot,
-        effectTag: (currentRoot?.dom === container) ? 'SAME' : 'ADD'
+        tags: (currentRoot?.dom === container) ? EFFECT.NONE : EFFECT.ADD
     }
 
-    if(wipRoot.effectTag == 'ADD'){ wipRoot.alternate = currentRoot = null; }
+    if(wipRoot.tags & EFFECT.ADD){ wipRoot.alternate = currentRoot = null; }
     
     let nextFiber = wipRoot;
     while(nextFiber){
@@ -95,17 +95,17 @@ function render(element: FlashElement, container: DOMNode): void{
 function reconcileFiber(fiber: Fiber): Fiber{
 
     if(fiber.parent){
-        if(fiber.effectTag === 'ADD' || fiber.shiftTag){
+        if(fiber.tags & EFFECT.ADD || fiber.tags & EFFECT.SHIFT ){
             let nextDomNode = fiber.prev == null ? fiber.parent.dom.firstChild: fiber.prev.dom.nextSibling;
             (nextDomNode != null ? console.log(`appending `, fiber.dom,` before `, nextDomNode) : console.log(`appending `, fiber.dom,` to end`))
             fiber.parent.dom.insertBefore(fiber.dom, nextDomNode);
         }
-        else if(fiber.type == TEXT_ELEMENT && fiber.effectTag === 'UPDATE'){
+        else if(fiber.type == TEXT_ELEMENT && fiber.tags & EFFECT.UPDATE){
             updateProps(fiber.dom, fiber.props);
         }
     }
 
-    console.log(fiber.effectTag, " ", fiber.dom, `${(fiber.shiftTag && "shifted")||""}`);
+    console.log(tagsToString(fiber.tags), " ", `${((fiber.alternate && (fiber.alternate.tags & EFFECT.DELETE)) && "DELETE OLD")||""}`, " ",fiber.dom, `${((fiber.tags & EFFECT.SHIFT) && "shifted")||""}`);
     
     let childElements = fiber.props.children;
     let oldChildFibers = fiber.alternate?.children ?? [];
@@ -118,40 +118,38 @@ function reconcileFiber(fiber: Fiber): Fiber{
         
         // Create fiber if needed and place SAME, UPDATE or ADD tags. Update shift tag.
         let key = childElement.props.key;
-        if(key in oldChildFibers){
+        if(key in oldChildFibers && oldChildFibers[key].type === childElement.type){
             if(oldChildFibers[key].type === childElement.type){
 
                 fiber.children[key] = {
                     type: oldChildFibers[key].type,
                     props: childElement.props,
                     dom: oldChildFibers[key].dom,
-                    alternate: oldChildFibers[key]
+                    alternate: oldChildFibers[key],
+                    tags: EFFECT.NONE
                 }
 
                 let {children: _, ...oldProps} = oldChildFibers[key].props;
                 let {children: __, ...newProps} = childElement.props;
 
-                fiber.children[key].effectTag = JSON.stringify(oldProps) == JSON.stringify(newProps) ? 'SAME' : 'UPDATE';
-                fiber.children[key].shiftTag = oldChildFibers[key].index != idx;
+                fiber.children[key].tags |= JSON.stringify(oldProps) != JSON.stringify(newProps) ? EFFECT.UPDATE : EFFECT.NONE ;
+                fiber.children[key].tags |= oldChildFibers[key].index != idx ? EFFECT.SHIFT : EFFECT.NONE ;
 
-            }
-            else{
-                removeChildFiberFromDOM(oldChildFibers[key]);
-                delete oldChildFibers[key];
-                fiber.children[key].effectTag = 'ADD';
             }
         }
         else{
-            fiber.children[key].effectTag = 'ADD';
-        }
-
-        if(fiber.children[key].effectTag === 'ADD'){
             fiber.children[key] = {
                 type: childElement.type,
                 props: childElement.props,
-                dom: createDomNode(childElement.type, childElement.props)
-            };
-        }
+                dom: createDomNode(childElement.type, childElement.props),
+                tags: EFFECT.ADD,
+                alternate: oldChildFibers[key]
+            }
+            if(key in oldChildFibers){
+                removeChildFiberFromDOM(oldChildFibers[key]);
+                //delete oldChildFibers[key];
+            }
+        };
 
         fiber.children[key].index = idx;
         fiber.children[key].parent = fiber;
@@ -212,9 +210,8 @@ function updateProps(domNode: DOMNode, props: Props){
 }
 
 function removeChildFiberFromDOM(childFiber: Fiber){
-    childFiber.effectTag = 'DELETE';
+    childFiber.tags |= EFFECT.DELETE;
     if(childFiber.dom){
-        console.log(childFiber.effectTag, " ", childFiber.dom);
         console.log(`removing`, childFiber.dom,` from `, childFiber.parent.dom);
         childFiber.parent.dom.removeChild(childFiber.dom);
     }
