@@ -19,7 +19,8 @@ export interface Fiber {
     type: string
     props: Props
     children: Fiber[]
-    dom: HTMLElement | Text
+    dom: DOMNode
+    deletions: DOMNode[]
     index?: number,
     tags?: number
     parent?: Fiber
@@ -30,19 +31,17 @@ export interface Fiber {
 }
 
 export enum EFFECT {
-    NONE = 0,
+    NONE = 1,
     UPDATE = 2,
-    ADD = 4,
-    DELETE = 8,
-    SHIFT = 16
+    SHIFT = 4
 }
 
 export function tagsToString(tags: EFFECT) {
-    let tagList = ['SAME', 'UPDATE', 'ADD', 'DELETE', 'SHIFT'];
-    if(tags == 0) return tagList[0];
-
+    let tagList = ['NONE', 'UPDATE', 'SHIFT'];
+    
     let str = "";
-    for(let b = 1; b < tagList.length; b++){
+
+    for(let b = 0; b < tagList.length; b++){
         if(tags & (1<<b)) str += tagList[b] + " ";
     }
     return str;
