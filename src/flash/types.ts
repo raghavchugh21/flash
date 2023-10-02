@@ -26,7 +26,6 @@ export interface Fiber {
     parent?: Fiber
     child?: Fiber
     sibling?: Fiber
-    prev?: Fiber
     alternate?: Fiber
 }
 

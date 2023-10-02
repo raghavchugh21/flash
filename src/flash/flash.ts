@@ -117,7 +117,7 @@ function reconcileFiber(fiber: Fiber): Fiber{
     
     childElements.forEach( (childElement, idx) => {
         
-        // Create fiber if needed and place SAME, UPDATE or ADD tags. Update shift tag.
+        // Create fiber if needed and set SHIFT, UPDATE tags appropriately.
         let key = childElement.props.key;
         if(key in oldChildFibers && oldChildFibers[key].type === childElement.type){
             
@@ -169,10 +169,8 @@ function reconcileFiber(fiber: Fiber): Fiber{
         if(idx == 0){
             fiber.child = fiber.children[key];
             previousSibling = fiber.children[key];
-            fiber.children[key].prev = null;
         }
         else{
-            fiber.children[key].prev = previousSibling;
             previousSibling.sibling = fiber.children[key];
             previousSibling = fiber.children[key];
         }
